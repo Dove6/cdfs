@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: (MIT OR Apache-2.0)
 
 use std::{
-    cell::RefCell,
     io::{Read, Result, Seek, SeekFrom},
-    rc::Rc,
+    sync::{Arc, RwLock},
 };
 
 use crate::BLOCK_SIZE;
@@ -22,7 +21,7 @@ impl<T: Read + Seek> ISO9660Reader for T {
 }
 
 // TODO: Figure out if sane API possible without Rc/RefCell
-pub(crate) struct FileRef<T: ISO9660Reader>(Rc<RefCell<T>>);
+pub(crate) struct FileRef<T: ISO9660Reader>(Arc<RwLock<T>>);
 
 impl<T: ISO9660Reader> Clone for FileRef<T> {
     fn clone(&self) -> FileRef<T> {
@@ -32,11 +31,11 @@ impl<T: ISO9660Reader> Clone for FileRef<T> {
 
 impl<T: ISO9660Reader> FileRef<T> {
     pub fn new(reader: T) -> FileRef<T> {
-        FileRef(Rc::new(RefCell::new(reader)))
+        FileRef(Arc::new(RwLock::new(reader)))
     }
 
     /// Read the block(s) at a given LBA (logical block address)
     pub fn read_at(&self, buf: &mut [u8], lba: u64) -> Result<usize> {
-        (*self.0).borrow_mut().read_at(buf, lba)
+        (*self.0.as_ref()).write().unwrap().read_at(buf, lba)
     }
 }

@@ -68,6 +68,7 @@ pub enum SuspExtension {
 }
 
 /// System Use Sharing Protocol (SUSP) entries.  SUSP specifies a method of storing additional data in the [`DirectoryEntry`] structure.
+#[allow(dead_code)]
 #[derive(Clone, Debug)]
 pub(crate) enum SystemUseEntry {
     // CE
